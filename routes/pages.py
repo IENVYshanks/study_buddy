@@ -1,9 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 
-try:
-    from study_agent.services.auth import validate_user
-except ModuleNotFoundError:
-    from services.auth import validate_user
+from services.auth import validate_user
 
 pages_bp = Blueprint("pages", __name__)
 

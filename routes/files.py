@@ -1,14 +1,9 @@
 from flask import Blueprint, current_app, jsonify, request
-from werkzeug.utils import secure_filename
 from pathlib import Path
-import os
+from werkzeug.utils import secure_filename
 
-try:
-    from study_agent.utils.os_function import delete, delete_all, list_files, save
-    from study_agent.utils.rag_pipeline import vectorize_uploaded_files
-except ModuleNotFoundError:
-    from utils.os_function import delete, delete_all, list_files, save
-    from utils.rag_pipeline import vectorize_uploaded_files
+from utils.os_function import delete, delete_all, list_files, save
+from utils.rag_pipeline import vectorize_uploaded_files
 
 files_bp = Blueprint("files", __name__)
 ALLOWED_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".doc", ".docx", ".csv", ".json"}

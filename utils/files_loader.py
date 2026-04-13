@@ -1,12 +1,8 @@
-from pathlib import Path
 from langchain_community.document_loaders import PyMuPDFLoader
 from flask import jsonify
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-try:
-    from study_agent.utils.os_function import FILES_DIR
-except ModuleNotFoundError:
-    from .os_function import FILES_DIR
+from .os_function import FILES_DIR
 
 doc = []
 content = []

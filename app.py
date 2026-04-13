@@ -1,11 +1,7 @@
 from flask import Flask
 
-try:
-    from .routes import register_blueprints
-    from .utils.vector_db import embedding_model
-except ModuleNotFoundError:
-    from routes import register_blueprints
-    from utils.vector_db import embedding_model
+from routes import register_blueprints
+from utils.vector_db import embedding_model
 
 
 class RagBackend:

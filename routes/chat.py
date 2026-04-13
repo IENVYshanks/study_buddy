@@ -2,18 +2,11 @@ import json
 
 from flask import Blueprint, Response, jsonify, request, stream_with_context
 
-try:
-    from study_agent.utils.llm import (
-        generate_response as llm_generate_response,
-        generate_response_stream as llm_generate_response_stream,
-        reset_history,
-    )
-except ModuleNotFoundError:
-    from utils.llm import (
-        generate_response as llm_generate_response,
-        generate_response_stream as llm_generate_response_stream,
-        reset_history,
-    )
+from utils.llm import (
+    generate_response as llm_generate_response,
+    generate_response_stream as llm_generate_response_stream,
+    reset_history,
+)
 
 chat_bp = Blueprint("chat", __name__)
 
