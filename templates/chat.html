@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Agent Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+</head>
+<body>
+    <main class="workspace-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <p class="eyebrow">Study Agent Chat</p>
+                <h1 id="chat-welcome">Chat with your assistant</h1>
+                <p class="sidebar-copy">
+                    The chat page can reference the files you uploaded earlier. This demo uses browser storage for file awareness, with no backend LLM request implemented.
+                </p>
+            </div>
+
+            <section class="file-list-panel">
+                <div class="panel-heading">
+                    <h2>Context files</h2>
+                    <span id="chat-file-count">0 files</span>
+                </div>
+                <ul id="chat-file-list" class="file-list">
+                    <li class="empty-state">No files available. Return to upload to add files.</li>
+                </ul>
+            </section>
+
+            <button type="button" id="back-upload-btn" class="ghost-btn">Back to Upload</button>
+        </aside>
+
+        <section class="chat-section">
+            <header class="chat-header">
+                <div>
+                    <p class="eyebrow">Context chat</p>
+                    <h2>Ask questions about your files</h2>
+                </div>
+                <button type="button" id="reset-chat-btn" class="ghost-btn">Reset Conversation</button>
+            </header>
+
+            <section id="chat-messages" class="chat-messages" aria-live="polite"></section>
+
+            <form id="chat-form" class="chat-form">
+                <label for="chat-input">Ask a question</label>
+                <div class="chat-input-row">
+                    <input
+                        type="text"
+                        id="chat-input"
+                        name="message"
+                        placeholder="Summarize the uploaded documents..."
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='js/studyflow.js') }}"></script>
+</body>
+</html>

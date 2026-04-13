@@ -1,0 +1,290 @@
+:root {
+    --bg: #07111f;
+    --surface: rgba(8, 20, 38, 0.76);
+    --surface-strong: rgba(10, 26, 49, 0.92);
+    --text: #e8f4ff;
+    --muted: #8fa9c6;
+    --accent: #49f2ff;
+    --accent-strong: #7cffc4;
+    --accent-dark: #0ab7d4;
+    --accent-soft: rgba(73, 242, 255, 0.12);
+    --line: rgba(98, 205, 255, 0.2);
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(73, 242, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 85% 18%, rgba(124, 255, 196, 0.12), transparent 22%),
+        linear-gradient(145deg, #050c16 0%, #07111f 42%, #0a1930 100%);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
+
+body::before {
+    background:
+        linear-gradient(rgba(73, 242, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(73, 242, 255, 0.05) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent);
+}
+
+body::after {
+    background: radial-gradient(circle at center, transparent 55%, rgba(1, 4, 10, 0.55) 100%);
+}
+
+.page-shell {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 52px;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.9fr;
+    gap: 28px;
+    align-items: stretch;
+}
+
+.panel {
+    background: var(--surface);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 35%, rgba(73, 242, 255, 0.04) 100%);
+    pointer-events: none;
+}
+
+.hero-copy {
+    padding: 56px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-copy::after {
+    content: "";
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    right: -70px;
+    top: -70px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(73, 242, 255, 0.24), transparent 70%);
+}
+
+.eyebrow {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(73, 242, 255, 0.08);
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    border: 1px solid rgba(73, 242, 255, 0.2);
+    box-shadow: inset 0 0 18px rgba(73, 242, 255, 0.06);
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 20px;
+    max-width: 10ch;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-shadow: 0 0 28px rgba(73, 242, 255, 0.18);
+}
+
+.lead {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 60ch;
+    margin-bottom: 28px;
+}
+
+.hero-points {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 30px;
+}
+
+.point-card {
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(8, 28, 52, 0.68);
+    border: 1px solid rgba(98, 205, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.point-card strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 6px;
+}
+
+.point-card span {
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.signup-card {
+    padding: 34px 28px;
+    background: linear-gradient(180deg, rgba(8, 24, 44, 0.94), rgba(10, 31, 56, 0.98));
+}
+
+.signup-card h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.signup-card p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+form {
+    display: grid;
+    gap: 16px;
+}
+
+label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: block;
+}
+
+input {
+    width: 100%;
+    border: 1px solid rgba(98, 205, 255, 0.18);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: rgba(4, 14, 28, 0.88);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+input:focus {
+    outline: 2px solid rgba(73, 242, 255, 0.14);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 5px rgba(73, 242, 255, 0.08);
+}
+
+input::placeholder {
+    color: #6e88a9;
+}
+
+button {
+    border: 0;
+    border-radius: 16px;
+    padding: 15px 18px;
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+    color: #03131b;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    box-shadow: 0 0 24px rgba(73, 242, 255, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 0 30px rgba(73, 242, 255, 0.28);
+}
+
+.microcopy {
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 28px;
+}
+
+.info-card {
+    padding: 28px;
+    background: rgba(8, 22, 40, 0.82);
+}
+
+.info-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.info-card p {
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 0;
+}
+
+.section-title {
+    margin: 48px 0 18px;
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 960px) {
+    .hero,
+    .info-grid,
+    .hero-points {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-copy,
+    .signup-card,
+    .info-card {
+        padding: 28px 22px;
+    }
+
+    h1 {
+        max-width: none;
+    }
+}

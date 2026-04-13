@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Agent Workspace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+</head>
+<body>
+    <main class="workspace-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <p class="eyebrow">Study Agent Workspace</p>
+                <h1>Upload and chat in one place</h1>
+                <p class="sidebar-copy">
+                    Add notes, PDFs, or reference files, then chat with Study Agent without leaving this page. The sidebar updates instantly so uploaded material and conversation stay together.
+                </p>
+            </div>
+
+            <section class="upload-panel">
+                <label class="upload-dropzone" for="file-upload">
+                    <span class="upload-title">Upload files</span>
+                    <span class="upload-subtitle">Choose one or more files (PDF, TXT, MD, DOC, DOCX, CSV, JSON)</span>
+                </label>
+                <input type="file" id="file-upload" accept=".pdf,.txt,.md,.doc,.docx,.csv,.json,application/pdf" multiple hidden>
+                <div class="upload-actions">
+                    <button type="button" id="upload-more-btn" class="secondary-btn">Upload Another</button>
+                    <button type="button" id="vectorize-files-btn" class="secondary-btn">Vectorize Files</button>
+                    <button type="button" id="clear-files-btn" class="ghost-btn upload-actions-wide">Remove All</button>
+                </div>
+            </section>
+
+            <section class="file-list-panel">
+                <div class="panel-heading">
+                    <h2>Uploaded Files</h2>
+                    <span id="file-count">0 files</span>
+                </div>
+                <ul id="uploaded-file-list" class="file-list">
+                    <li class="empty-state">No files uploaded yet.</li>
+                </ul>
+            </section>
+        </aside>
+
+        <section class="chat-section">
+            <header class="chat-header">
+                <div>
+                    <p class="eyebrow">Stateful Chat Demo</p>
+                    <h2>Chat with Study Agent</h2>
+                </div>
+                <button type="button" id="reset-chat-btn" class="ghost-btn">Reset Chat</button>
+            </header>
+
+            <section id="chat-messages" class="chat-messages" aria-live="polite">
+                <article class="message assistant">
+                    <p class="message-label">Study Agent</p>
+                    <p>
+                        Upload your study files in the sidebar, then ask questions here. Everything stays on this page so your files and conversation remain visible together.
+                    </p>
+                </article>
+            </section>
+
+            <form id="chat-form" class="chat-form">
+                <label for="chat-input">Ask a question</label>
+                <div class="chat-input-row">
+                    <input
+                        type="text"
+                        id="chat-input"
+                        name="message"
+                        placeholder="Summarize my notes on neural networks..."
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+        </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
+</body>
+</html>

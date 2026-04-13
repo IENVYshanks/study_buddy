@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Agent Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+</head>
+<body>
+    <main class="workspace-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <p class="eyebrow">Study Agent Upload</p>
+                <h1 id="welcome-heading">Manage your study files</h1>
+                <p class="sidebar-copy">
+                    Upload your files here and delete any you no longer want. Your file list is stored in the browser so it is ready when you move to the chat page.
+                </p>
+            </div>
+
+            <section class="upload-panel">
+                <label class="upload-dropzone" for="file-upload">
+                    <span class="upload-title">Upload files</span>
+                    <span class="upload-subtitle">Choose one or more files (PDF, TXT, MD, DOC, DOCX, CSV, JSON)</span>
+                </label>
+                <input type="file" id="file-upload" accept=".pdf,.txt,.md,.doc,.docx,.csv,.json,application/pdf" multiple hidden>
+                <div class="upload-actions">
+                    <button type="button" id="upload-more-btn" class="secondary-btn">Upload Files</button>
+                    <button type="button" id="clear-files-btn" class="ghost-btn">Remove All</button>
+                </div>
+            </section>
+
+            <section class="file-list-panel">
+                <div class="panel-heading">
+                    <h2>Uploaded Files</h2>
+                    <span id="upload-file-count">0 files</span>
+                </div>
+                <ul id="upload-file-list" class="file-list">
+                    <li class="empty-state">No files uploaded yet.</li>
+                </ul>
+            </section>
+
+            <button type="button" id="to-chat-btn" class="secondary-btn">Continue to Chat</button>
+        </aside>
+
+        <section class="chat-section">
+            <header class="chat-header">
+                <div>
+                    <p class="eyebrow">Upload stage</p>
+                    <h2>Prepare your study context</h2>
+                </div>
+            </header>
+            <div class="chat-messages" style="padding: 24px; max-height: calc(100vh - 170px); overflow-y: auto;">
+                <article class="message assistant">
+                    <p class="message-label">Study Agent</p>
+                    <p>
+                        Upload your study materials on the left. When you are ready, continue to the chat page where the assistant will use those files as context.
+                    </p>
+                </article>
+                <article class="message assistant">
+                    <p class="message-label">Tip</p>
+                    <p>
+                        This page manages file names locally in your browser. No file contents are sent to a backend in this demo.
+                    </p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='js/studyflow.js') }}"></script>
+</body>
+</html>

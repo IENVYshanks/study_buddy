@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero">
+            <div class="panel hero-copy">
+                <div class="eyebrow">Study Agent Platform</div>
+                <h1>Study smarter with RAG, LLMs, and MCP-inspired workflows.</h1>
+                <p class="lead">
+                    Study Agent is a learning assistant designed to combine your study material with large language models,
+                    so answers stay contextual, practical, and focused on what you actually need to learn.
+                </p>
+                <div class="hero-points">
+                    <div class="point-card">
+                        <strong>RAG-backed answers</strong>
+                        <span>Retrieval-Augmented Generation helps the system pull relevant notes or documents before responding.</span>
+                    </div>
+                    <div class="point-card">
+                        <strong>LLM reasoning</strong>
+                        <span>An LLM turns retrieved information into clearer summaries, explanations, and guided responses.</span>
+                    </div>
+                    <div class="point-card">
+                        <strong>MCP concept</strong>
+                        <span>MCP-style connectivity lets an agent work across tools, data sources, and workflows in a structured way.</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="panel signup-card">
+                <h2>Join the waitlist</h2>
+                <p>
+                    Share your name and email to connect this form with the backend endpoint. The backend processing is not being implemented here, only the frontend submission.
+                </p>
+                <form action="{{ url_for('pages.submit_details') }}" method="post" onsubmit="saveUserDetails()">
+                    <div>
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                    </div>
+                    <div>
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                    </div>
+                    <button type="submit">Send to Backend</button>
+                </form>
+                <p class="microcopy">This form posts to the backend route and redirects to the upload page when successful.</p>
+                {% if error %}
+                <p class="microcopy" style="color: #a53d3d;">{{ error }}</p>
+                {% endif %}
+                <p class="microcopy">Already ready? <a href="{{ url_for('pages.upload') }}">Go to upload</a>.</p>
+                <script>
+                    function saveUserDetails() {
+                        const nameValue = document.getElementById('name')?.value.trim();
+                        const emailValue = document.getElementById('email')?.value.trim();
+                        if (nameValue && emailValue) {
+                            localStorage.setItem('studyAgentUser', JSON.stringify({ name: nameValue, email: emailValue }));
+                        }
+                    }
+                </script>
+            </aside>
+        </section>
+
+        <h2 class="section-title">How Study Agent works</h2>
+        <section class="info-grid">
+            <article class="panel info-card">
+                <h3>1. Retrieve the right context</h3>
+                <p>
+                    Instead of relying only on general model memory, Study Agent can search relevant course notes, uploaded material,
+                    and knowledge sources to ground the response in your learning context.
+                </p>
+            </article>
+            <article class="panel info-card">
+                <h3>2. Generate useful guidance</h3>
+                <p>
+                    The LLM helps transform retrieved information into explanations, concise breakdowns, revision support, and answers
+                    that feel more like a study companion than a static search result.
+                </p>
+            </article>
+            <article class="panel info-card">
+                <h3>3. Connect through MCP ideas</h3>
+                <p>
+                    Using the MCP concept, an agent can be designed to interact with multiple tools and context providers in a reliable way,
+                    making the study experience more modular and extensible.
+                </p>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

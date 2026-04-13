@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <form id ="upload_file">
+        <input type="file" name="test_upload" placeholder="load the file" required >
+        <button type="submit" name="submit">Submit</button>
+        <br>
+        <button id="deleteBtn">Delete All</button>
+        <button id="createTokenBtn">Create Token</button>
+        <button id="authBtn">Authorize</button>
+        <button id="createRAG">create rag</button>
+    </form>
+    <script src = "{{ url_for('static', filename='js/test.js') }}"></script>
+</body>
+</html>
