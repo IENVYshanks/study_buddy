@@ -1,8 +1,8 @@
 from flask import Flask
 
 try:
-    from study_agent.routes import register_blueprints
-    from study_agent.utils.vector_db import embedding_model
+    from .routes import register_blueprints
+    from .utils.vector_db import embedding_model
 except ModuleNotFoundError:
     from routes import register_blueprints
     from utils.vector_db import embedding_model

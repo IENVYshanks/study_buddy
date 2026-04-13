@@ -1,9 +1,9 @@
 import os
-from flask import jsonify
+
 try:
-    from langchain_community.chat_models import ChatOllama
+    from langchain_ollama import ChatOllama
 except ModuleNotFoundError:
-    ollama = None
+    ChatOllama = None
 
 model = os.getenv("OLLAMA_MODEL")
 history = []
@@ -11,18 +11,15 @@ DEFAULT_MODEL = model if model else "qwen3.5:0.8b"
 
 
 def generate_response(user_input):
-    if ollama is None:
+    if ChatOllama is None:
         return "Ollama is not installed on the server."
 
     history.append({"role": "user", "content": user_input})
 
     try:
-        chat = ChatOllama(model ="qwen3.5:0.8b")
-        response = chat.invoke(
-            messages= user_input
-        )
-        if response :
-            return jsonify(response.content.strip())
+        chat = ChatOllama(model=DEFAULT_MODEL)
+        response = chat.invoke(history)
+        response_text = (response.content or "").strip()
 
         if not response_text:
             response_text = "I could not generate a response right now."
@@ -35,24 +32,17 @@ def generate_response(user_input):
 
 
 def generate_response_stream(user_input):
-    if ollama is None:
+    if ChatOllama is None:
         yield {"type": "error", "message": "Ollama is not installed on the server."}
         return
 
     history.append({"role": "user", "content": user_input})
+    chat = ChatOllama(model=DEFAULT_MODEL)
     chunks = []
 
     try:
-        stream = ollama.chat(
-            model=DEFAULT_MODEL,
-            messages=list(history),
-            stream=True
-        )
-
-        for chunk in stream:
-            text = ""
-            if isinstance(chunk, dict):
-                text = chunk.get("message", {}).get("content", "")
+        for chunk in chat.stream(history):
+            text = getattr(chunk, "content", "") or ""
 
             if text:
                 chunks.append(text)
