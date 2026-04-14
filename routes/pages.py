@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, redirect, render_template, request, session, url_for
 
 from services.auth import validate_user
 
@@ -27,9 +27,10 @@ def chat():
 
 @pages_bp.route("/api/submit", methods=["POST"], endpoint="submit_details")
 def submit_details():
-    name = request.form.get("name")
-    email = request.form.get("email")
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
 
     if validate_user(name=name, email=email):
+        session["username"] = name
         return redirect(url_for("pages.workspace"))
     return render_template("index.html", error="Invalid details. Please try again.")

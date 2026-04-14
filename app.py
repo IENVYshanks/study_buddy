@@ -1,5 +1,5 @@
+import os
 from flask import Flask
-
 from routes import register_blueprints
 from utils.vector_db import embedding_model
 
@@ -25,6 +25,7 @@ def create_app() -> Flask:
         static_url_path="/static",
         template_folder="templates",
     )
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "study-buddy-dev-secret")
     init_rag_backend(app)
     register_blueprints(app)
     return app

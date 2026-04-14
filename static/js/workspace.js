@@ -4,7 +4,8 @@ const ALLOWED_FILE_EXTENSIONS = new Set(["pdf", "txt", "md", "doc", "docx", "csv
 
 const state = {
     uploadedFiles: [],
-    chatMessages: loadChatState()
+    chatMessages: loadChatState(),
+    username: loadActiveUsername()
 };
 
 const fileInput = document.getElementById("file-upload");
@@ -39,6 +40,25 @@ function loadChatState() {
             text: DEFAULT_ASSISTANT_MESSAGE
         }
     ];
+}
+
+function loadActiveUsername() {
+    try {
+        const savedUser = JSON.parse(localStorage.getItem("studyAgentUser"));
+        return (savedUser?.name || "").trim();
+    } catch (error) {
+        return "";
+    }
+}
+
+function ensureActiveUsername() {
+    if (state.username) {
+        return true;
+    }
+
+    showToast("Please sign in with a valid username first.");
+    window.location.href = "/";
+    return false;
 }
 
 function saveChatState() {
@@ -131,8 +151,14 @@ function renderMessages() {
 }
 
 async function fetchFiles() {
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
     try {
-        const response = await fetch("/api/files");
+        const response = await fetch(`/api/files?username=${encodeURIComponent(state.username)}`, {
+            method: "GET"
+        });
         const payload = await response.json();
 
         if (!response.ok) {
@@ -153,8 +179,13 @@ async function uploadFile(file) {
         return;
     }
 
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("username", state.username);
     
     try {
         const response = await fetch("/api/upload", {
@@ -180,8 +211,13 @@ function isAllowedFile(file) {
 }
 
 async function removeFile(filename) {
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
     const formData = new FormData();
     formData.append("filename", filename);
+    formData.append("username", state.username);
 
     try {
         const response = await fetch("/api/delete", {
@@ -201,15 +237,17 @@ async function removeFile(filename) {
 }
 
 async function removeAllFiles() {
-    try{
-        
-    }catch(error){
-        showToast("Network error while removing files.");
+    if (!ensureActiveUsername()) {
+        return;
     }
-    
+
     try {
         const response = await fetch("/api/delete-all", {
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: state.username })
         });
         const payload = await response.json();
         showToast(payload.message || "All files removed.");
@@ -404,6 +442,10 @@ async function resetChatHistory() {
 }
 
 async function initializeWorkspace() {
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
     renderMessages();
     renderFiles();
     await fetchFiles();
@@ -415,13 +457,21 @@ async function vectorizeFiles() {
         return;
     }
 
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
     vectorizeFilesButton.disabled = true;
     const originalLabel = vectorizeFilesButton.textContent;
     vectorizeFilesButton.textContent = "Vectorizing...";
 
     try {
         const response = await fetch("/api/vectorize-files", {
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: state.username })
         });
         const payload = await response.json();
 
@@ -450,20 +500,35 @@ function deleteFilesOnWindowClose() {
         return;
     }
 
+    if (!state.username) {
+        return;
+    }
+
     hasTriggeredExitCleanup = true;
 
     try {
-        const wasQueued = navigator.sendBeacon("/api/delete-all");
+        const payload = new Blob([JSON.stringify({ username: state.username })], {
+            type: "application/json"
+        });
+        const wasQueued = navigator.sendBeacon("/api/delete-all", payload);
         if (!wasQueued) {
             fetch("/api/delete-all", {
                 method: "POST",
-                keepalive: true
+                keepalive: true,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username: state.username })
             });
         }
     } catch (error) {
         fetch("/api/delete-all", {
             method: "POST",
-            keepalive: true
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: state.username })
         });
     }
 }

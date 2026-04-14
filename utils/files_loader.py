@@ -36,3 +36,4 @@ def chunked_files(doc, chunk_size = 1024, chunk_overlap = 200):
         chunk_overlap=chunk_overlap
     )
     return text_splitter.split_documents(doc)
+    
