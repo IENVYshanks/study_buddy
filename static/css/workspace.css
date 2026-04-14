@@ -61,11 +61,8 @@ input {
     width: min(1320px, calc(100% - 32px));
     margin: 0 auto;
     padding: 24px 0;
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 24px;
+    position: relative;
     height: 100vh;
-    align-items: start;
 }
 
 .sidebar,
@@ -90,11 +87,21 @@ input {
 }
 
 .sidebar {
+    width: 340px;
     padding: 28px 22px;
-    position: sticky;
+    position: absolute;
+    left: 0;
     top: 24px;
     height: calc(100vh - 48px);
     overflow-y: auto;
+    z-index: 20;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.workspace-shell.sidebar-collapsed .sidebar {
+    transform: translateX(calc(-100% - 24px));
+    opacity: 0;
+    pointer-events: none;
 }
 
 .eyebrow {
@@ -143,6 +150,23 @@ input {
 
 .file-list-panel {
     margin-top: 18px;
+    overflow: hidden;
+}
+
+.upload-panel-heading {
+    margin-bottom: 0;
+}
+
+.upload-panel-heading h2 {
+    margin-bottom: 6px;
+}
+
+.upload-panel-content {
+    margin-top: 14px;
+}
+
+.upload-panel.collapsed .upload-panel-content {
+    display: none;
 }
 
 .upload-dropzone {
@@ -179,6 +203,12 @@ input {
 
 .upload-actions-wide {
     grid-column: 1 / -1;
+}
+
+.rag-status {
+    margin: 14px 4px 0;
+    color: var(--muted);
+    line-height: 1.5;
 }
 
 .secondary-btn,
@@ -221,6 +251,12 @@ input {
     background: rgba(78, 241, 255, 0.1);
 }
 
+.section-toggle-btn {
+    width: auto;
+    min-width: 96px;
+    padding: 10px 14px;
+}
+
 .panel-heading {
     display: flex;
     align-items: center;
@@ -255,11 +291,26 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.file-meta {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .file-meta strong,
 .file-meta span {
     display: block;
+}
+
+.file-meta strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .file-meta span,
@@ -276,12 +327,27 @@ input {
     font-weight: 700;
 }
 
+button:disabled,
+input:disabled,
+.remove-file-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+    transform: none;
+    box-shadow: none;
+}
+
 .chat-section {
     display: grid;
     grid-template-rows: auto 1fr auto;
     padding: 28px;
     height: calc(100vh - 48px);
     overflow: hidden;
+    margin-left: 364px;
+    transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+.workspace-shell.sidebar-collapsed .chat-section {
+    margin-left: 0;
 }
 
 .chat-header {
@@ -290,6 +356,64 @@ input {
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 20px;
+}
+
+.chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-header .ghost-btn {
+    width: auto;
+    min-width: 148px;
+    flex: 0 0 auto;
+}
+
+.chat-start-screen {
+    display: none;
+    align-self: center;
+    justify-self: center;
+    width: min(100%, 760px);
+    text-align: center;
+    padding: 24px 12px 8px;
+}
+
+.chat-section.chat-start-mode {
+    grid-template-rows: auto 1fr auto;
+}
+
+.chat-section.chat-start-mode .chat-messages {
+    display: none;
+}
+
+.chat-section.chat-start-mode .chat-start-screen {
+    display: block;
+}
+
+.chat-section.chat-start-mode .chat-form {
+    width: min(100%, 960px);
+    justify-self: center;
+    align-self: start;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.chat-start-brand {
+    margin: 0 0 18px;
+    color: rgba(231, 246, 255, 0.7);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.chat-start-title {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: #f7fbff;
 }
 
 .chat-messages {
@@ -328,42 +452,92 @@ input {
     margin-bottom: 8px;
 }
 
+.message-body > :first-child {
+    margin-top: 0;
+}
+
+.message-body > :last-child {
+    margin-bottom: 0;
+}
+
+.message-body p,
+.message-body ul,
+.message-body ol,
+.message-body h1,
+.message-body h2,
+.message-body h3 {
+    margin: 0 0 10px;
+}
+
+.message-body ul,
+.message-body ol {
+    padding-left: 20px;
+}
+
+.message-body li + li {
+    margin-top: 6px;
+}
+
+.message-body h1,
+.message-body h2,
+.message-body h3 {
+    color: #f7fbff;
+    line-height: 1.25;
+}
+
+.message-body code {
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.95em;
+}
+
 .chat-form {
     margin-top: 18px;
     padding-top: 16px;
     border-top: 1px solid rgba(78, 241, 255, 0.12);
 }
 
-.chat-form label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 700;
-}
-
 .chat-input-row {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 12px;
+    align-items: center;
+    padding: 10px 12px 10px 18px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 16px 40px rgba(0, 0, 0, 0.24);
 }
 
 .chat-input-row input {
     width: 100%;
-    border: 1px solid rgba(78, 241, 255, 0.16);
-    border-radius: 16px;
-    padding: 14px 16px;
-    background: rgba(4, 16, 31, 0.92);
+    border: 0;
+    border-radius: 18px;
+    padding: 14px 10px;
+    background: transparent;
     color: var(--text);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    font-size: 1.05rem;
+    box-shadow: none;
 }
 
 .chat-input-row input:focus {
-    outline: 2px solid rgba(78, 241, 255, 0.14);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 5px rgba(78, 241, 255, 0.08);
+    outline: none;
+    box-shadow: none;
 }
 
 .chat-input-row input::placeholder {
-    color: #6f8fb2;
+    color: rgba(231, 246, 255, 0.5);
+}
+
+.chat-form button {
+    width: auto;
+    min-width: 120px;
+    border-radius: 999px;
+    padding: 14px 20px;
 }
 
 .toast {
@@ -397,15 +571,24 @@ input {
     }
 
     .workspace-shell {
-        grid-template-columns: 1fr;
         height: auto;
+        padding-bottom: 24px;
     }
 
     .sidebar,
     .chat-section {
         position: static;
+        width: 100%;
         height: auto;
         min-height: 70vh;
+        margin-left: 0;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+    }
+
+    .workspace-shell.sidebar-collapsed .sidebar {
+        display: none;
     }
 
     .upload-actions {
@@ -414,5 +597,10 @@ input {
 
     .upload-actions-wide {
         grid-column: auto;
+    }
+
+    .chat-header,
+    .chat-header-actions {
+        flex-wrap: wrap;
     }
 }

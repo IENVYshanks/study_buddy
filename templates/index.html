@@ -55,6 +55,9 @@
                 <p class="microcopy">Already ready? <a href="{{ url_for('pages.upload') }}">Go to upload</a>.</p>
                 <script>
                     function saveUserDetails() {
+                        localStorage.removeItem('study-agent-chat-state');
+                        localStorage.removeItem('study-agent-active-collection');
+                        localStorage.removeItem('study-agent-rag-locked');
                         const nameValue = document.getElementById('name')?.value.trim();
                         const emailValue = document.getElementById('email')?.value.trim();
                         if (nameValue && emailValue) {

@@ -1,19 +1,35 @@
-const DEFAULT_ASSISTANT_MESSAGE = "Upload your study files in the sidebar, then ask questions here. Everything stays on this page so your files and conversation remain visible together.";
 const CHAT_STORAGE_KEY = "study-agent-chat-state";
+const COLLECTION_STORAGE_KEY = "study-agent-active-collection";
+const RAG_LOCK_STORAGE_KEY = "study-agent-rag-locked";
+const UPLOAD_PANEL_STORAGE_KEY = "study-agent-upload-panel-open";
+const SIDEBAR_OPEN_STORAGE_KEY = "study-agent-sidebar-open";
 const ALLOWED_FILE_EXTENSIONS = new Set(["pdf", "txt", "md", "doc", "docx", "csv", "json"]);
 
 const state = {
     uploadedFiles: [],
     chatMessages: loadChatState(),
-    username: loadActiveUsername()
+    username: loadActiveUsername(),
+    collectionName: loadCollectionName(),
+    ragLocked: loadRagLockState(),
+    isUploadPanelOpen: loadUploadPanelState(),
+    isSidebarOpen: loadSidebarState()
 };
 
+const workspaceShell = document.querySelector(".workspace-shell");
+const workspaceSidebar = document.getElementById("workspace-sidebar");
+const toggleSidebarButton = document.getElementById("toggle-sidebar-btn");
+const uploadPanel = document.getElementById("upload-panel");
+const toggleUploadButton = document.getElementById("toggle-upload-btn");
 const fileInput = document.getElementById("file-upload");
 const fileList = document.getElementById("uploaded-file-list");
 const fileCount = document.getElementById("file-count");
 const uploadMoreButton = document.getElementById("upload-more-btn");
 const vectorizeFilesButton = document.getElementById("vectorize-files-btn");
 const clearFilesButton = document.getElementById("clear-files-btn");
+const goBackButton = document.getElementById("go-back-btn");
+const ragStatus = document.getElementById("rag-status");
+const chatSection = document.querySelector(".chat-section");
+const chatStartScreen = document.getElementById("chat-start-screen");
 const chatMessages = document.getElementById("chat-messages");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
@@ -27,19 +43,14 @@ let hasTriggeredExitCleanup = false;
 function loadChatState() {
     try {
         const savedState = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY));
-        if (Array.isArray(savedState) && savedState.length > 0) {
+        if (Array.isArray(savedState)) {
             return savedState;
         }
     } catch (error) {
         console.warn("Unable to restore chat state.", error);
     }
 
-    return [
-        {
-            role: "assistant",
-            text: DEFAULT_ASSISTANT_MESSAGE
-        }
-    ];
+    return [];
 }
 
 function loadActiveUsername() {
@@ -59,6 +70,91 @@ function ensureActiveUsername() {
     showToast("Please sign in with a valid username first.");
     window.location.href = "/";
     return false;
+}
+
+function loadCollectionName() {
+    return (localStorage.getItem(COLLECTION_STORAGE_KEY) || "").trim();
+}
+
+function loadRagLockState() {
+    return localStorage.getItem(RAG_LOCK_STORAGE_KEY) === "true";
+}
+
+function loadUploadPanelState() {
+    const saved = localStorage.getItem(UPLOAD_PANEL_STORAGE_KEY);
+    return saved === null ? true : saved === "true";
+}
+
+function loadSidebarState() {
+    const saved = localStorage.getItem(SIDEBAR_OPEN_STORAGE_KEY);
+    return saved === null ? true : saved === "true";
+}
+
+function saveCollectionName(collectionName) {
+    const value = (collectionName || "").trim();
+    state.collectionName = value;
+
+    if (value) {
+        localStorage.setItem(COLLECTION_STORAGE_KEY, value);
+        return;
+    }
+
+    localStorage.removeItem(COLLECTION_STORAGE_KEY);
+}
+
+function saveRagLockState(isLocked) {
+    state.ragLocked = Boolean(isLocked);
+    localStorage.setItem(RAG_LOCK_STORAGE_KEY, state.ragLocked ? "true" : "false");
+}
+
+function saveUploadPanelState(isOpen) {
+    state.isUploadPanelOpen = Boolean(isOpen);
+    localStorage.setItem(UPLOAD_PANEL_STORAGE_KEY, state.isUploadPanelOpen ? "true" : "false");
+}
+
+function saveSidebarState(isOpen) {
+    state.isSidebarOpen = Boolean(isOpen);
+    localStorage.setItem(SIDEBAR_OPEN_STORAGE_KEY, state.isSidebarOpen ? "true" : "false");
+}
+
+function renderUploadPanelState() {
+    if (!uploadPanel || !toggleUploadButton) {
+        return;
+    }
+
+    uploadPanel.classList.toggle("collapsed", !state.isUploadPanelOpen);
+    toggleUploadButton.textContent = state.isUploadPanelOpen ? "Close" : "Open";
+    toggleUploadButton.setAttribute("aria-expanded", state.isUploadPanelOpen ? "true" : "false");
+}
+
+function renderSidebarState() {
+    if (!workspaceShell || !toggleSidebarButton) {
+        return;
+    }
+
+    const shouldShowSidebar = state.isSidebarOpen || window.innerWidth <= 940;
+    workspaceShell.classList.toggle("sidebar-collapsed", !shouldShowSidebar);
+    toggleSidebarButton.textContent = shouldShowSidebar ? "Hide Sidebar" : "Show Sidebar";
+    toggleSidebarButton.setAttribute("aria-expanded", shouldShowSidebar ? "true" : "false");
+
+    if (workspaceSidebar) {
+        workspaceSidebar.setAttribute("aria-hidden", shouldShowSidebar ? "false" : "true");
+    }
+}
+
+function updateWorkspaceLockState() {
+    const isLocked = state.ragLocked;
+    uploadMoreButton.disabled = isLocked;
+    fileInput.disabled = isLocked;
+    clearFilesButton.disabled = isLocked;
+    vectorizeFilesButton.disabled = isLocked || state.uploadedFiles.length === 0;
+    goBackButton.disabled = !isLocked;
+
+    if (ragStatus) {
+        ragStatus.textContent = isLocked
+            ? "RAG is active. File changes are locked until you click Go Back, which removes the user's files and vector collection."
+            : "Files can still be edited. Vectorize to lock the current set for chat.";
+    }
 }
 
 function saveChatState() {
@@ -99,6 +195,7 @@ function buildFileItem(filename) {
     removeButton.type = "button";
     removeButton.className = "remove-file-btn";
     removeButton.textContent = "Remove";
+    removeButton.disabled = state.ragLocked;
     removeButton.addEventListener("click", async () => {
         await removeFile(filename);
     });
@@ -117,12 +214,14 @@ function renderFiles() {
         emptyState.className = "empty-state";
         emptyState.textContent = "No files uploaded yet.";
         fileList.appendChild(emptyState);
+        updateWorkspaceLockState();
         return;
     }
 
     state.uploadedFiles.forEach((filename) => {
         fileList.appendChild(buildFileItem(filename));
     });
+    updateWorkspaceLockState();
 }
 
 function buildMessageNode(message) {
@@ -133,14 +232,101 @@ function buildMessageNode(message) {
     label.className = "message-label";
     label.textContent = message.role === "assistant" ? "Study Agent" : "You";
 
-    const body = document.createElement("p");
-    body.textContent = message.text;
+    const body = document.createElement("div");
+    body.className = "message-body";
+    if (message.role === "assistant") {
+        body.innerHTML = renderMarkdown(message.text || "");
+    } else {
+        body.textContent = message.text;
+    }
 
     messageElement.append(label, body);
     return messageElement;
 }
 
+function escapeHtml(text) {
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function renderInlineMarkdown(text) {
+    let escaped = escapeHtml(text);
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    escaped = escaped.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    escaped = escaped.replace(/`([^`]+)`/g, "<code>$1</code>");
+    return escaped;
+}
+
+function renderMarkdown(text) {
+    const normalized = (text || "").replace(/\r\n/g, "\n").trim();
+    if (!normalized) {
+        return "";
+    }
+
+    const lines = normalized.split("\n");
+    const blocks = [];
+    let currentList = null;
+
+    function flushList() {
+        if (currentList) {
+            blocks.push(`<ul>${currentList.join("")}</ul>`);
+            currentList = null;
+        }
+    }
+
+    for (const rawLine of lines) {
+        const line = rawLine.trim();
+
+        if (!line) {
+            flushList();
+            continue;
+        }
+
+        if (line.startsWith("* ") || line.startsWith("- ")) {
+            if (!currentList) {
+                currentList = [];
+            }
+            currentList.push(`<li>${renderInlineMarkdown(line.slice(2).trim())}</li>`);
+            continue;
+        }
+
+        const numberedMatch = line.match(/^\d+\.\s+(.+)$/);
+        if (numberedMatch) {
+            if (!currentList) {
+                currentList = [];
+            }
+            currentList.push(`<li>${renderInlineMarkdown(numberedMatch[1].trim())}</li>`);
+            continue;
+        }
+
+        flushList();
+
+        if (line.startsWith("### ")) {
+            blocks.push(`<h3>${renderInlineMarkdown(line.slice(4).trim())}</h3>`);
+        } else if (line.startsWith("## ")) {
+            blocks.push(`<h2>${renderInlineMarkdown(line.slice(3).trim())}</h2>`);
+        } else if (line.startsWith("# ")) {
+            blocks.push(`<h1>${renderInlineMarkdown(line.slice(2).trim())}</h1>`);
+        } else {
+            blocks.push(`<p>${renderInlineMarkdown(line)}</p>`);
+        }
+    }
+
+    flushList();
+    return blocks.join("");
+}
+
 function renderMessages() {
+    const hasConversation = state.chatMessages.length > 0;
+    chatSection.classList.toggle("chat-start-mode", !hasConversation);
+    if (chatStartScreen) {
+        chatStartScreen.setAttribute("aria-hidden", hasConversation ? "true" : "false");
+    }
+
     chatMessages.innerHTML = "";
 
     state.chatMessages.forEach((message) => {
@@ -183,6 +369,11 @@ async function uploadFile(file) {
         return;
     }
 
+    if (state.ragLocked) {
+        showToast("Files are locked after vectorization. Click Go Back to reset this workspace.");
+        return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("username", state.username);
@@ -215,6 +406,11 @@ async function removeFile(filename) {
         return;
     }
 
+    if (state.ragLocked) {
+        showToast("Files are locked after vectorization. Click Go Back to reset this workspace.");
+        return;
+    }
+
     const formData = new FormData();
     formData.append("filename", filename);
     formData.append("username", state.username);
@@ -238,6 +434,11 @@ async function removeFile(filename) {
 
 async function removeAllFiles() {
     if (!ensureActiveUsername()) {
+        return;
+    }
+
+    if (state.ragLocked) {
+        showToast("Files are locked after vectorization. Click Go Back to reset this workspace.");
         return;
     }
 
@@ -275,8 +476,22 @@ uploadMoreButton.addEventListener("click", () => {
     fileInput.click();
 });
 
+toggleUploadButton.addEventListener("click", () => {
+    saveUploadPanelState(!state.isUploadPanelOpen);
+    renderUploadPanelState();
+});
+
+toggleSidebarButton.addEventListener("click", () => {
+    saveSidebarState(!state.isSidebarOpen);
+    renderSidebarState();
+});
+
 clearFilesButton.addEventListener("click", async () => {
     await removeAllFiles();
+});
+
+goBackButton.addEventListener("click", async () => {
+    await goBackAndResetWorkspace();
 });
 
 vectorizeFilesButton.addEventListener("click", async () => {
@@ -338,7 +553,11 @@ async function requestLLMResponseStream(userText, assistantIndex) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ user_input: userText })
+            body: JSON.stringify({
+                user_input: userText,
+                username: state.username,
+                collection_name: state.collectionName
+            })
         });
 
         if (!response.ok) {
@@ -418,26 +637,31 @@ resetChatButton.addEventListener("click", () => {
     resetChatHistory();
 });
 
-async function resetChatHistory() {
+function getInitialChatMessages() {
+    return [];
+}
+
+async function resetChatHistory(options = {}) {
+    const { silent = false } = options;
+
     try {
         const response = await fetch("/api/delete-history", {
             method: "POST"
         });
         const payload = await response.json();
-        showToast(payload.message || "Chat history reset.");
+        if (!silent) {
+            showToast(payload.message || "Chat history reset.");
+        }
 
         if (response.ok) {
-            state.chatMessages = [
-                {
-                    role: "assistant",
-                    text: DEFAULT_ASSISTANT_MESSAGE
-                }
-            ];
+            state.chatMessages = getInitialChatMessages();
             saveChatState();
             renderMessages();
         }
     } catch (error) {
-        showToast("Network error while resetting chat history.");
+        if (!silent) {
+            showToast("Network error while resetting chat history.");
+        }
     }
 }
 
@@ -446,6 +670,8 @@ async function initializeWorkspace() {
         return;
     }
 
+    renderSidebarState();
+    renderUploadPanelState();
     renderMessages();
     renderFiles();
     await fetchFiles();
@@ -458,6 +684,11 @@ async function vectorizeFiles() {
     }
 
     if (!ensureActiveUsername()) {
+        return;
+    }
+
+    if (state.ragLocked) {
+        showToast("RAG is already active for this workspace. Click Go Back to reset it.");
         return;
     }
 
@@ -481,6 +712,11 @@ async function vectorizeFiles() {
         }
 
         const skipped = payload?.summary?.skipped_files || [];
+        const collectionName = payload?.summary?.collection_name || "";
+        saveCollectionName(collectionName);
+        saveRagLockState(Boolean(collectionName));
+        await resetChatHistory({ silent: true });
+        renderFiles();
         if (skipped.length > 0) {
             showToast(`${payload.message} Skipped: ${skipped.join(", ")}`);
             return;
@@ -490,8 +726,54 @@ async function vectorizeFiles() {
     } catch (error) {
         showToast("Network error while vectorizing files.");
     } finally {
-        vectorizeFilesButton.disabled = false;
         vectorizeFilesButton.textContent = originalLabel;
+        updateWorkspaceLockState();
+    }
+}
+
+async function goBackAndResetWorkspace() {
+    if (!ensureActiveUsername()) {
+        return;
+    }
+
+    if (!state.ragLocked) {
+        window.location.href = "/";
+        return;
+    }
+
+    goBackButton.disabled = true;
+    const originalLabel = goBackButton.textContent;
+    goBackButton.textContent = "Resetting...";
+
+    try {
+        const response = await fetch("/api/go-back", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: state.username,
+                collection_name: state.collectionName
+            })
+        });
+        const payload = await response.json();
+
+        if (!response.ok) {
+            showToast(payload.message || "Unable to reset workspace.");
+            return;
+        }
+
+        state.uploadedFiles = [];
+        saveCollectionName("");
+        saveRagLockState(false);
+        renderFiles();
+        showToast(payload.message || "Workspace reset.");
+        window.location.href = "/";
+    } catch (error) {
+        showToast("Network error while resetting workspace.");
+    } finally {
+        goBackButton.textContent = originalLabel;
+        updateWorkspaceLockState();
     }
 }
 
@@ -501,6 +783,10 @@ function deleteFilesOnWindowClose() {
     }
 
     if (!state.username) {
+        return;
+    }
+
+    if (state.ragLocked) {
         return;
     }
 
@@ -535,5 +821,6 @@ function deleteFilesOnWindowClose() {
 
 window.addEventListener("pagehide", deleteFilesOnWindowClose);
 window.addEventListener("beforeunload", deleteFilesOnWindowClose);
+window.addEventListener("resize", renderSidebarState);
 
 initializeWorkspace();

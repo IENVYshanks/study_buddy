@@ -1,14 +1,13 @@
-from flask import Blueprint, current_app, jsonify, request, session
+from flask import Blueprint, jsonify, request, session
 from pathlib import Path
 from werkzeug.utils import secure_filename
-
 from services.auth import get_user
 from utils.os_function import delete, delete_all, list_files, normalize_username, save
 from utils.rag_pipeline import vectorize_uploaded_files
+from utils.vector_db import VectorStoreManager
 
 files_bp = Blueprint("files", __name__)
 ALLOWED_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".doc", ".docx", ".csv", ".json"}
-
 
 def _extract_username():
     payload = request.get_json(silent=True) or {}
@@ -116,13 +115,7 @@ def vectorize_files():
         return jsonify({"message": "No uploaded files found to vectorize."}), 400
 
     try:
-        rag_backend = current_app.extensions["rag_backend"]
-        summary = vectorize_uploaded_files(
-            username=username,
-            embed_model=rag_backend.get_embedding_model(),
-        )
-    except (KeyError, RuntimeError) as error:
-        return jsonify({"message": f"RAG backend is unavailable: {error}"}), 500
+        summary = vectorize_uploaded_files(username=username)
     except Exception as error:
         return jsonify({"message": f"Vectorization failed: {error}"}), 500
 
@@ -132,3 +125,35 @@ def vectorize_files():
     )
 
     return jsonify({"message": message, "summary": summary}), 200
+
+
+@files_bp.route("/api/go-back", methods=["POST"])
+def go_back():
+    username, error = _resolve_valid_username()
+    if error:
+        return error
+
+    payload = request.get_json(silent=True) or {}
+    collection_name = payload.get("collection_name")
+
+    try:
+        deleted_collections = VectorStoreManager.delete_collection_for_user(
+            username=username,
+            collection_name=collection_name,
+        )
+        removed_count = delete_all(username)
+    except PermissionError as error:
+        return jsonify({"message": str(error)}), 403
+    except ValueError as error:
+        return jsonify({"message": str(error)}), 400
+    except Exception as error:
+        return jsonify({"message": f"Unable to reset workspace: {error}"}), 500
+
+    return jsonify(
+        {
+            "message": "Workspace reset. Files and RAG collection were removed.",
+            "files": list_files(username),
+            "deleted_files": removed_count,
+            "deleted_collections": deleted_collections,
+        }
+    ), 200

@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify
 import os
-from utils.vector_db import embedding_model
 import jwt
 import datetime
 from utils.rag_pipeline import create_rag
@@ -8,17 +7,11 @@ from utils.rag_pipeline import create_rag
 app = Flask(__name__)
 
 SECRET_KEY = "super_secret_key_123"
-model = None
-
-
-def get_embedding_model():
-    global model
-    if model is None:
-        model = embedding_model()
-    return model
 
 
 # ---------------- FILE UPLOAD ----------------
+
+
 @app.route("/", methods=["GET", "POST"])
 def test():
     if request.method == "POST":
@@ -80,6 +73,8 @@ def create_token():
 
 
 # ---------------- PROTECTED ----------------
+
+
 @app.route("/protected", methods=["GET"])
 def verify_token():
     auth_header = request.headers.get("Authorization")
@@ -105,12 +100,14 @@ def verify_token():
     
     
 # -----------------creation of rag ------------------------------
+
+
 @app.route("/create_rag", methods = ["POST"])
 def create():
     data = request.get_json()
     username = data.get("username")
     try:
-        name = create_rag(username = username, embed_model = get_embedding_model())
+        name = create_rag(username = username)
         return jsonify({"message" :f"rag created for the uploaded files {name}"})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500

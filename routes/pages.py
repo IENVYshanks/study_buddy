@@ -1,6 +1,7 @@
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
 from services.auth import validate_user
+from utils.llm import reset_history
 
 pages_bp = Blueprint("pages", __name__)
 
@@ -32,5 +33,6 @@ def submit_details():
 
     if validate_user(name=name, email=email):
         session["username"] = name
+        reset_history()
         return redirect(url_for("pages.workspace"))
     return render_template("index.html", error="Invalid details. Please try again.")

@@ -8,7 +8,7 @@
 </head>
 <body>
     <main class="workspace-shell">
-        <aside class="sidebar">
+        <aside class="sidebar" id="workspace-sidebar">
             <div class="sidebar-header">
                 <p class="eyebrow">Study Agent Workspace</p>
                 <h1>Upload and chat in one place</h1>
@@ -17,16 +17,27 @@
                 </p>
             </div>
 
-            <section class="upload-panel">
-                <label class="upload-dropzone" for="file-upload">
-                    <span class="upload-title">Upload files</span>
-                    <span class="upload-subtitle">Choose one or more files (PDF, TXT, MD, DOC, DOCX, CSV, JSON)</span>
-                </label>
-                <input type="file" id="file-upload" accept=".pdf,.txt,.md,.doc,.docx,.csv,.json,application/pdf" multiple hidden>
-                <div class="upload-actions">
-                    <button type="button" id="upload-more-btn" class="secondary-btn">Upload Another</button>
-                    <button type="button" id="vectorize-files-btn" class="secondary-btn">Vectorize Files</button>
-                    <button type="button" id="clear-files-btn" class="ghost-btn upload-actions-wide">Remove All</button>
+            <section class="upload-panel" id="upload-panel">
+                <div class="panel-heading upload-panel-heading">
+                    <div>
+                        <h2>Upload Files</h2>
+                        <span>Choose one or more files (PDF, TXT, MD, DOC, DOCX, CSV, JSON)</span>
+                    </div>
+                    <button type="button" id="toggle-upload-btn" class="ghost-btn section-toggle-btn" aria-expanded="true">Close</button>
+                </div>
+                <div id="upload-panel-content" class="upload-panel-content">
+                    <label class="upload-dropzone" for="file-upload">
+                        <span class="upload-title">Upload files</span>
+                        <span class="upload-subtitle">Choose one or more files (PDF, TXT, MD, DOC, DOCX, CSV, JSON)</span>
+                    </label>
+                    <input type="file" id="file-upload" accept=".pdf,.txt,.md,.doc,.docx,.csv,.json,application/pdf" multiple hidden>
+                    <div class="upload-actions">
+                        <button type="button" id="upload-more-btn" class="secondary-btn">Upload Another</button>
+                        <button type="button" id="vectorize-files-btn" class="secondary-btn">Vectorize Files</button>
+                        <button type="button" id="clear-files-btn" class="ghost-btn upload-actions-wide">Remove All</button>
+                        <button type="button" id="go-back-btn" class="ghost-btn upload-actions-wide">Go Back</button>
+                    </div>
+                    <p id="rag-status" class="rag-status">Files can still be edited. Vectorize to lock the current set for chat.</p>
                 </div>
             </section>
 
@@ -44,29 +55,30 @@
         <section class="chat-section">
             <header class="chat-header">
                 <div>
-                    <p class="eyebrow">Stateful Chat Demo</p>
-                    <h2>Chat with Study Agent</h2>
+                    <p class="eyebrow">Study Agent</p>
+                    <h2>Chat</h2>
                 </div>
-                <button type="button" id="reset-chat-btn" class="ghost-btn">Reset Chat</button>
+                <div class="chat-header-actions">
+                    <button type="button" id="toggle-sidebar-btn" class="ghost-btn">Hide Sidebar</button>
+                    <button type="button" id="reset-chat-btn" class="ghost-btn">Reset Chat</button>
+                </div>
             </header>
 
+            <section id="chat-start-screen" class="chat-start-screen" aria-hidden="true">
+                <p class="chat-start-brand">Study Agent</p>
+                <h3 class="chat-start-title">What are you working on?</h3>
+            </section>
+
             <section id="chat-messages" class="chat-messages" aria-live="polite">
-                <article class="message assistant">
-                    <p class="message-label">Study Agent</p>
-                    <p>
-                        Upload your study files in the sidebar, then ask questions here. Everything stays on this page so your files and conversation remain visible together.
-                    </p>
-                </article>
             </section>
 
             <form id="chat-form" class="chat-form">
-                <label for="chat-input">Ask a question</label>
                 <div class="chat-input-row">
                     <input
                         type="text"
                         id="chat-input"
                         name="message"
-                        placeholder="Summarize my notes on neural networks..."
+                        placeholder="Ask anything"
                         autocomplete="off"
                         required
                     >
