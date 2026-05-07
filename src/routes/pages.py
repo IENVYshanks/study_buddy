@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
-from services.auth import validate_user
-from utils.llm import reset_history
+from src.services.auth import validate_user
+from src.utils.llm import reset_history
 
 pages_bp = Blueprint("pages", __name__)
 

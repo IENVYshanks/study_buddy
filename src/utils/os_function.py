@@ -2,7 +2,7 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 FILES_DIR = BASE_DIR / "files"
 
 

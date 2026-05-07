@@ -777,7 +777,15 @@ async function goBackAndResetWorkspace() {
     }
 }
 
-function deleteFilesOnWindowClose() {
+function clearClientWorkspaceState() {
+    state.uploadedFiles = [];
+    saveCollectionName("");
+    saveRagLockState(false);
+    state.chatMessages = getInitialChatMessages();
+    saveChatState();
+}
+
+function cleanupWorkspaceOnWindowClose() {
     if (hasTriggeredExitCleanup) {
         return;
     }
@@ -786,41 +794,42 @@ function deleteFilesOnWindowClose() {
         return;
     }
 
-    if (state.ragLocked) {
-        return;
-    }
-
     hasTriggeredExitCleanup = true;
+    const cleanupPayload = JSON.stringify({
+        username: state.username,
+        collection_name: state.collectionName
+    });
+    clearClientWorkspaceState();
 
     try {
-        const payload = new Blob([JSON.stringify({ username: state.username })], {
+        const payload = new Blob([cleanupPayload], {
             type: "application/json"
         });
-        const wasQueued = navigator.sendBeacon("/api/delete-all", payload);
+        const wasQueued = navigator.sendBeacon("/api/cleanup", payload);
         if (!wasQueued) {
-            fetch("/api/delete-all", {
+            fetch("/api/cleanup", {
                 method: "POST",
                 keepalive: true,
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ username: state.username })
+                body: cleanupPayload
             });
         }
     } catch (error) {
-        fetch("/api/delete-all", {
+        fetch("/api/cleanup", {
             method: "POST",
             keepalive: true,
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ username: state.username })
+            body: cleanupPayload
         });
     }
 }
 
-window.addEventListener("pagehide", deleteFilesOnWindowClose);
-window.addEventListener("beforeunload", deleteFilesOnWindowClose);
+window.addEventListener("pagehide", cleanupWorkspaceOnWindowClose);
+window.addEventListener("beforeunload", cleanupWorkspaceOnWindowClose);
 window.addEventListener("resize", renderSidebarState);
 
 initializeWorkspace();

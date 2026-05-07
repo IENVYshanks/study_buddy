@@ -33,7 +33,11 @@ def create_rag(file_name = None, username = None, embed_model = None):
     _, docs = load_user_pdfs(username=username)
     chunked_doc = chunked_files(docs)
     if username != None:
-        vector_store = VectorStoreManager(collection_name = f"{username}_{uuid.uuid4()}")
+        safe_username = normalize_username(username)
+        vector_store = VectorStoreManager(
+            persist_dir=VectorStoreManager.get_user_persist_dir(safe_username),
+            collection_name = f"{safe_username}_{uuid.uuid4()}",
+        )
     else:
         vector_store = VectorStoreManager()
     name = vector_store.add_files(chunked_doc)
@@ -57,9 +61,19 @@ def vectorize_uploaded_files(username = None, embed_model = None):
     if not pdf_files:
         raise ValueError("No PDF files found to vectorize.")
 
-    collection_name = create_rag(username = username, embed_model = embed_model)
     _, docs = load_user_pdfs(username=username)
     chunked_doc = chunked_files(docs)
+    if not chunked_doc:
+        raise ValueError("No readable PDF content found to vectorize.")
+
+    if username != None:
+        vector_store = VectorStoreManager(
+            persist_dir=VectorStoreManager.get_user_persist_dir(safe_username),
+            collection_name = f"{safe_username}_{uuid.uuid4()}",
+        )
+    else:
+        vector_store = VectorStoreManager()
+    collection_name = vector_store.add_files(chunked_doc)
 
     return {
         "collection_name": collection_name,

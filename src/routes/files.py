@@ -1,16 +1,35 @@
+import json
+
 from flask import Blueprint, jsonify, request, session
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from services.auth import get_user
-from utils.os_function import delete, delete_all, list_files, normalize_username, save
-from utils.rag_pipeline import vectorize_uploaded_files
-from utils.vector_db import VectorStoreManager
+from src.services.auth import get_user
+from src.utils.os_function import delete, delete_all, list_files, normalize_username, save
+from src.utils.rag_pipeline import vectorize_uploaded_files
+from src.utils.vector_db import VectorStoreManager
 
 files_bp = Blueprint("files", __name__)
 ALLOWED_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".doc", ".docx", ".csv", ".json"}
 
+
+def _extract_payload():
+    payload = request.get_json(silent=True)
+    if isinstance(payload, dict):
+        return payload
+
+    if request.mimetype not in {"application/json", "text/plain"}:
+        return {}
+
+    try:
+        decoded = (request.get_data(cache=True, as_text=True) or "").strip()
+        parsed = json.loads(decoded) if decoded else {}
+        return parsed if isinstance(parsed, dict) else {}
+    except (TypeError, ValueError):
+        return {}
+
+
 def _extract_username():
-    payload = request.get_json(silent=True) or {}
+    payload = _extract_payload()
     return (
         request.form.get("username")
         or request.args.get("username")
@@ -34,6 +53,16 @@ def _resolve_valid_username():
 
     session["username"] = user["name"]
     return safe_username, None
+
+
+def _cleanup_workspace(username, collection_name=None, missing_collection_ok=True):
+    deleted_collections = VectorStoreManager.delete_collection_for_user(
+        username=username,
+        collection_name=collection_name,
+        missing_ok=missing_collection_ok,
+    )
+    removed_count = delete_all(username)
+    return deleted_collections, removed_count
 
 
 @files_bp.route("/api/upload", methods=["POST"])
@@ -133,15 +162,12 @@ def go_back():
     if error:
         return error
 
-    payload = request.get_json(silent=True) or {}
-    collection_name = payload.get("collection_name")
-
     try:
-        deleted_collections = VectorStoreManager.delete_collection_for_user(
+        deleted_collections, removed_count = _cleanup_workspace(
             username=username,
-            collection_name=collection_name,
+            collection_name=None,
+            missing_collection_ok=True,
         )
-        removed_count = delete_all(username)
     except PermissionError as error:
         return jsonify({"message": str(error)}), 403
     except ValueError as error:
@@ -152,6 +178,35 @@ def go_back():
     return jsonify(
         {
             "message": "Workspace reset. Files and RAG collection were removed.",
+            "files": list_files(username),
+            "deleted_files": removed_count,
+            "deleted_collections": deleted_collections,
+        }
+    ), 200
+
+
+@files_bp.route("/api/cleanup", methods=["POST"])
+def cleanup_workspace():
+    username, error = _resolve_valid_username()
+    if error:
+        return error
+
+    try:
+        deleted_collections, removed_count = _cleanup_workspace(
+            username=username,
+            collection_name=None,
+            missing_collection_ok=True,
+        )
+    except PermissionError as error:
+        return jsonify({"message": str(error)}), 403
+    except ValueError as error:
+        return jsonify({"message": str(error)}), 400
+    except Exception as error:
+        return jsonify({"message": f"Unable to clean up workspace: {error}"}), 500
+
+    return jsonify(
+        {
+            "message": "Workspace cleanup complete. Files and vector collections were removed.",
             "files": list_files(username),
             "deleted_files": removed_count,
             "deleted_collections": deleted_collections,

@@ -2,14 +2,14 @@ import json
 
 from flask import Blueprint, Response, jsonify, request, session, stream_with_context
 
-from services.auth import get_user
-from utils.os_function import normalize_username
-from utils.llm import (
+from src.services.auth import get_user
+from src.utils.os_function import normalize_username
+from src.utils.llm import (
     generate_response as llm_generate_response,
     generate_response_stream as llm_generate_response_stream,
     reset_history,
 )
-from utils.rag_pipeline import query_rag
+from src.utils.rag_pipeline import query_rag
 
 chat_bp = Blueprint("chat", __name__)
 
